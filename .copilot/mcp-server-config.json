@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "weather": {
+      "type": "node",
+      "command": "node",
+      "args": [
+        "/Users/xavierlassus/dev/courses-new/mcp/server.js"
+      ]
+    }
+  }
+}
