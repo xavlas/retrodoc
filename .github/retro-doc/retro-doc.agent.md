@@ -16,6 +16,7 @@ agents:
   - API Contract Extractor
   - Migration Assessor
   - VitePress Expose
+  - Analytics Dashboard
 ---
 
 # Retro Doc
@@ -33,15 +34,16 @@ Orchestrates the full reverse engineering and retro-documentation of an existing
 
 ## Subagent Delegation
 
-This agent orchestrates five subagents. The first four analyze the codebase in parallel; the fifth generates documentation output:
+This agent orchestrates six subagents. The first four analyze the codebase in parallel; the remaining two generate output in parallel after synthesis:
 
 - **Code Analyzer** — scans the codebase structure, technology stack, dependencies, and code patterns.
 - **Architecture Mapper** — maps layers, components, modules, and data flows.
 - **API Contract Extractor** — extracts all interfaces, API endpoints, data models, and contracts.
 - **Migration Assessor** — evaluates complexity, risk areas, and technology migration recommendations.
 - **VitePress Expose** — transforms synthesis documents into a VitePress-compatible documentation site structure.
+- **Analytics Dashboard** — generates an interactive HTML dashboard (heatmap, treemap, quadrant chart, Sankey diagram, radar lines) grouped by domain from the synthesis documents.
 
-Run the first four subagents via `runSubagent` in parallel, providing the target application path and the output file path. Wait for all four to complete, then run VitePress Expose to generate the final documentation site.
+Run the first four subagents via `runSubagent` in parallel, providing the target application path and the output file path. Wait for all four to complete, then synthesize the results, then automatically run VitePress Expose and Analytics Dashboard (these two can run in parallel) to generate the final documentation site and dashboard.
 
 ## Output Artifact Structure
 
@@ -67,6 +69,7 @@ All output lives in `.retro-doc/` at the workspace root:
 │   │   ├── config.js             # VitePress site config
 │   │   └── theme.js              # Theme customization (optional)
 │   └── package.json              # VitePress dev dependencies
+├── dashboard.html                # Self-contained interactive analytics dashboard
 └── subagents/
     ├── code-analysis.md          # Raw output from Code Analyzer
     ├── architecture-map.md       # Raw output from Architecture Mapper
@@ -105,27 +108,36 @@ Using the four subagent outputs:
 5. Write `.retro-doc/migration-report.md` — migration complexity, hot spots, and recommendations.
 6. Write `.retro-doc/index.md` — executive summary linking all documents.
 
-### Phase 3b: VitePress Exposure (Optional)
+### Phase 3b: VitePress Exposure + Analytics Dashboard (Automatic, Parallel)
 
-Once synthesis is complete, run the **VitePress Expose** subagent to generate a browsable documentation site:
+Once synthesis is complete, automatically run both output subagents **in parallel**:
 
+**VitePress Expose:**
 - Provide paths to all synthesis documents (`.retro-doc/*.md`).
 - Specify output directory: `.retro-doc/vitepress/`.
-- The subagent generates a VitePress site structure with config, navigation, and reformatted pages.
+- Generates a VitePress site structure with config, navigation, and reformatted pages.
 - Result is a site ready to run with `npm run docs:dev` (from `.retro-doc/vitepress/`).
+
+**Analytics Dashboard:**
+- Provide paths to all five synthesis documents (stack, architecture, api-contracts, business-logic, migration-report).
+- Specify output file: `.retro-doc/dashboard.html`.
+- Generates a self-contained interactive HTML dashboard with five visualisations: heatmap, treemap, quadrant chart, Sankey diagram, and radar lines — each grouped by domain.
+- The dashboard is openable directly in a browser with no build step required.
+- After VitePress Expose completes, the Analytics Dashboard will also patch `config.js` to add a Dashboard nav entry and write a `dashboard.md` stub into the VitePress docs folder.
 
 ### Phase 4: Review and Refinement
 
 1. Present the `.retro-doc/index.md` to the user.
-2. Offer to generate the VitePress site for interactive browsing if not yet done.
-3. Ask whether any area needs deeper analysis.
-4. Re-run specific subagents or expand specific documents based on feedback.
+2. Inform the user that the VitePress site is ready in `.retro-doc/vitepress/` and can be served with `npm run docs:dev`.
+3. Inform the user that the analytics dashboard is available at `.retro-doc/dashboard.html` and can be opened directly in any browser.
+4. Ask whether any area needs deeper analysis.
+5. Re-run specific subagents or expand specific documents based on feedback.
 
 ## Required Protocol
 
 1. Never skip Phase 1 — always confirm the target path before analysis.
 2. Run all four analysis subagents before writing synthesis documents.
-3. VitePress Expose is optional (Phase 3b) — offer it to the user after synthesis, do not run automatically.
+3. VitePress Expose and Analytics Dashboard are both mandatory (Phase 3b) — run them in parallel automatically after synthesis completes, without waiting for user confirmation.
 4. Cite exact file paths and line numbers when referencing specific code findings.
 5. Use technology-agnostic language in synthesis documents to avoid biasing the rewrite team.
 6. When the target rewrite technology is known, the Migration Assessor must include a compatibility matrix.
